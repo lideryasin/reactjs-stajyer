@@ -8,25 +8,37 @@ import {
   AccordionItemBody,
 } from 'react-accessible-accordion';
 import 'react-accessible-accordion/dist/fancy-example.css';
-import ZoomableImage from 'react-zoomable-image';
-
 import Message from './Message';
 import './search.css';
+import trim from 'trim';
+import './MessageBox.css';
 
 function searchingFor(term) {
+  String.prototype.turkishToLower = function () {
+    var string = this;
+    var letters = { "İ": "i", "I": "ı", "Ş": "ş", "Ğ": "ğ", "Ü": "ü", "Ö": "ö", "Ç": "ç" };
+    string = string.replace(/(([İIŞĞÜÇÖ]))/g, function (letter) { return letters[letter]; })
+    return string.toLowerCase();
+  }
   return function (x) {
-    return x.message.toLowerCase().includes(term.toLowerCase()) || !term + x.yayinEvi.toLowerCase().includes(term.toLowerCase()) || !term + x.yazarAdi.toLowerCase().includes(term.toLowerCase()) || !term + x.kitapKimde.toLowerCase().includes(term.toLowerCase()) || !term;
+    return x.message.turkishToLower().includes(term.turkishToLower()) || !term + x.yayinEvi.toLowerCase().includes(term.toLowerCase()) || !term + x.yazarAdi.toLowerCase().includes(term.toLowerCase()) || !term + x.kitapKimde.toLowerCase().includes(term.toLowerCase()) || !term;
   }
 }
 
 class MessageList extends Component {
   constructor(props) {
     super(props);
+
     this.state = {
       term: '',
-      messages: []
+      messages: [],
+      adsoyadkitapKimde: [],
     };
     this.searchHandler = this.searchHandler.bind(this);
+  }
+
+  yasinChange(event) {
+    this.setState({ yasin: event.target.value });
   }
 
   componentDidMount() {
@@ -35,7 +47,6 @@ class MessageList extends Component {
       this.getData(snapshot.val());
     });
   }
-
   componentWillUnmount() {
     firebase.database().ref('messages').off('value');
   }
@@ -54,10 +65,28 @@ class MessageList extends Component {
         return cloned;
       })
       .value();
+    messages = messages.reverse().sort((a, b) => Intl.Collator("tr").compare(b.message, a.message));
     this.setState({
-      messages
+      messages: messages.reverse()
     });
   }
+
+  adListGetData(values) {
+    let messagesVal = values;
+    let adsoyadkitapKimde = _(messagesVal)
+      .keys()
+      .map(messageKey => {
+        let cloned = _.clone(messagesVal[messageKey]);
+        cloned.key = messageKey;
+        return cloned;
+      })
+      .value();
+    adsoyadkitapKimde = adsoyadkitapKimde.reverse().sort((a, b) => Intl.Collator("tr").compare(b.message, a.message));
+    this.setState({
+      adsoyadkitapKimde: adsoyadkitapKimde.reverse()
+    });
+  }
+
   render() {
     const { term, messages } = this.state;
     let messageNodes = messages.filter(searchingFor(term)).map((message) => {
@@ -68,35 +97,17 @@ class MessageList extends Component {
               <div className="panel-group">
                 <div className="panel panel-default">
                   <AccordionItemTitle>
-                    <a onClick={() => this.setState({ activeBookKey: message.key })}>
+                    <a onClick={() => this.setState({ activeBookKey: message.key })} >
                       <img src={message.image} style={{ width: "50px", height: "50px" }} /> <br />
-                      {/* <ZoomableImage
-                        baseImage={{
-                          alt: 'An image',
-                          src: message.image,
-                          width: 100,
-                          height: 100
-                        }}
-                        largeImage={{
-                          alt: 'A large image',
-                          src: message.image,
-                          width: 350,
-                          height: 350
-                        }}
-                        thumbnailImage={{
-                          alt: 'A small image',
-                          src: message.image
-                        }}
-                      /> */}
-                      {message.message}
+                      Kitap Adı: {message.message} <div style={{ float: 'right' }}>{message.saat}</div>
                     </a>
                   </AccordionItemTitle>
                   <AccordionItemBody className="panel-heading" data-trigger={message.message} >
                     <ul className="list-group">
-                      <li className="list-group-item"><Message message={message.yayinEvi} /></li>
-                      <li className="list-group-item"><Message message={message.yazarAdi} /></li>
-                      <li className="list-group-item"><Message message={message.kitapKimde} /></li>
-                      <li className="list-group-item"><Message message={message.adSoyad} /></li>
+                      <li key={message.key} className="list-group-item">Yazarın Adı: <Message message={message.yazarAdi} /></li>
+                      <li className="list-group-item">Yayın Evi: <Message message={message.yayinEvi} /></li>
+                      <li className="list-group-item">Kitap Kimde: <Message message={message.kitapKimde} /></li>
+                      <li className="list-group-item">Ad Soyad: <Message message={message.adSoyad} /></li>
                     </ul>
                   </AccordionItemBody>
                 </div>
@@ -108,13 +119,19 @@ class MessageList extends Component {
     });
     return (
       <div>
-        <form>
-          <input type="text" className="form-control mr-sm-2 search" placeholder="Search" aria-label="Search" onChange={this.searchHandler} />
-        </form>
-        <Accordion accordion>
-          {messageNodes}
-        </Accordion>
-
+        <div>
+          <form>
+            <input type="text" className="form-control mr-sm-2 search" placeholder="Search" aria-label="Search" onChange={this.searchHandler} />
+          </form>
+          <Accordion accordion>
+            {messageNodes}
+          </Accordion>
+          <ul>
+            {
+              this.state.messages.map(message => <li key={message.key}>{message.text}</li>)
+            }
+          </ul>
+        </div>
       </div>
     );
   }
@@ -138,6 +155,3 @@ class MessageList extends Component {
   }
 }
 export default MessageList;
-
-
-//<img  width="30px" height="30px" src={message.image}/> 

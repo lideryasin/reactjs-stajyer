@@ -4,4 +4,9 @@
     background-repeat: no-repeat;
     background-size: 100% auto;
     color: white;
+    padding-top: 0px;
+    height: 1px;
+  }
+  .yazi{
+    font-size: 18px;
   }

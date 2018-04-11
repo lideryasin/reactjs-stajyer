@@ -6,12 +6,11 @@ import trim from 'trim';
 class Navbar extends React.Component {
     constructor(props) {
         super(props);
-
-        this.setState({
+        
+        this.state ={
             yayineviEkle: '',
             yayinEvleri: []
-        })
-
+        }
     }
     onChange4(e) {
         this.setState({
@@ -20,9 +19,11 @@ class Navbar extends React.Component {
     }
     yayinEviKaydet() {
         const dbRef = firebase.database().ref('/yayinEvleri');
-        dbRef.push({
+        dbRef.child(this.state.yayineviEkle).set({
             yayineviEkle: trim(this.state.yayineviEkle)
         });
+
+        this.refs.someName2.value = '';
     }
     render() {
         return (
@@ -48,7 +49,7 @@ class Navbar extends React.Component {
 
                             <li className="nav-item">
                                 <form className="form-inline my-2 my-lg-0">
-                                    <input className="form-control mr-sm-2" onChange={this.onChange4.bind(this)} type="search" placeholder="Yayın Evi" aria-label="Search" />
+                                    <input ref="someName2" className="form-control mr-sm-2" onChange={this.onChange4.bind(this)} type="search" placeholder="Yayın Evi" aria-label="Search" />
                                 </form>
                             </li>
                             <li className="nav-item">

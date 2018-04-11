@@ -30,7 +30,6 @@ class App extends Component {
         <HashRouter>
           <div>
             <Navbar />
-            <Jumbotron title="WELCOME" subtitle="“Bir kitap okuyan her şeyi bildiğini zanneder. İkinci kitabı okuyan kuşkuya düşer. Üçüncü kitabı okuyan hiçbir şey bilmediğini anlar.” Frederick Pollock" />
               <Route path="/KitapEkle" component={KitapEkle} />
               <Route path="/KitapListele" component={KitapListele} />
               <Route exact path="/" component={KitapEkle} />

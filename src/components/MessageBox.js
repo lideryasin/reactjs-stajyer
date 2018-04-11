@@ -7,46 +7,37 @@ import FileUpload from './FileUpload';
 import './MessageBox.css';
 import _ from 'lodash';
 
-var config = {
-  apiKey: "AIzaSyCgYcHwfwhQbrx_Ux_AvCqIkSn3mzog_Mo",
-  authDomain: "react1-697c3.firebaseapp.com",
-  databaseURL: "https://react1-697c3.firebaseio.com",
-  projectId: "react1-697c3",
-  storageBucket: "react1-697c3.appspot.com",
-  messagingSenderId: "190614813192"
-};
-
 class MessageBox extends Component {
   constructor(props) {
     super(props);
     this.onChange = this.onChange.bind(this);
-    this.onKeyup = this.onKeyup.bind(this);
-    this.on2 = this.on2.bind(this);
     this.onChange2 = this.onChange2.bind(this);
     this.onChange3 = this.onChange3.bind(this);
     this.handleChange = this.handleChange.bind(this);
     this.handleChange2 = this.handleChange2.bind(this);
-    this.onImageChange = this.onImageChange.bind(this);
-    this.handleFileSelect = this.handleFileSelect.bind(this);
-    this.handleFileUpload = this.handleFileUpload.bind(this);
-    this.text = this.text.bind(this);
-    this.handleUpload = this.handleUpload.bind(this);
     this.onChange4 = this.onChange4.bind(this);
-    this.yayinEviKaydet = this.yayinEviKaydet.bind(this);
+    this.yasinChange = this.yasinChange.bind(this);
+    this.yasinChange2 = this.yasinChange2.bind(this);
 
     this.state = {
+      saat: '',
       adSoyad: '',
       message: '',
       yazarAdi: '',
-      kitapKimde: 'Şeref Keser CIO',
+      kitapKimde: '',
       yayinEvi: 'Abaküs',
+      yayineviEkle: '',
       text: '',
       file: '',
-      yayineviEkle: '',
       imagePreviewUrl: '',
       pictures: [],
       messages: [],
-      yayinEvleri: []
+      yayinEvleri: [],
+      yasin: 'Okumadı',
+      yasin2: '',
+      AdSoyadList: [],
+      kitapKimdeList: [],
+
     };
   }
   onChange(e) {
@@ -75,89 +66,11 @@ class MessageBox extends Component {
   handleChange(event) {
     this.setState({ yayinEvi: event.target.value });
   }
-  onKeyup(e) {
-    if (e.keyCode === 13 && trim(e.target.value) !== '') {
-      e.preventDefault();
-      let dbCon = this.props.db.database().ref('/messages');
-      dbCon.push({
-        message: trim(e.target.value)
-      });
-      this.setState({
-        message: ''
-      });
-    }
+  yasinChange(event) {
+    this.setState({ yasin: event.target.value });
   }
-  on2(e) {
-    e.preventDefault();
-    var dbCon = this.props.db.database().ref('/messages');
-    dbCon.push({
-      message: trim(this.state.message),
-      yazarAdi: trim(this.state.yazarAdi),
-      kitapKimde: trim(this.state.kitapKimde),
-      yayinEvi: trim(this.state.yayinEvi),
-    });
-    this.setState({
-      message: '',
-      yazarAdi: '',
-      kitapKimde: 'Şeref Keser CIO',
-      yayinEvi: 'Abaküs',
-
-    });
-  }
-  onImageChange(event) {
-    if (event.target.files && event.target.files[0]) {
-      let reader = new FileReader();
-      reader.onload = (e) => {
-        this.setState({ file: e.target.result });
-      };
-      reader.readAsDataURL(event.target.files[0]);
-    }
-  }
-  handleFileSelect(e) {
-    this.setState({ file: e.target.files[0] })
-  }
-  handleFileUpload() {
-    const storageRef = firebase.storage().ref();
-    this.setState({ uploading: true })
-    storageRef.child(this.state.text)
-      .put(this.state.file)
-      .then(snap => {
-        this.setState({ uploading: false })
-      })
-      .catch(err => this.setState({ error: err.message }))
-  }
-  text(e) {
-    this.setState({
-      text: e.target.value
-    })
-  }
-  //ilk foto upload
-  handleUpload(event) {
-    const file = event.target.files[0];
-    const storageRef = firebase.storage().ref(`fotos/${file.name}`);
-    const task = storageRef.put(file);
-
-    task.on('state_changed', snapshot => {
-      let percentage = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-      this.setState({
-        uploadValue: percentage
-      })
-    }, error => {
-      console.error(error.message);
-    }, () => {
-      const record = {
-        image: task.snapshot.downloadURL
-      }
-      const dbRef = this.props.db.database().ref('/messages');
-     /* const newPicture = */dbRef.push({
-        message: trim(this.state.message),
-        yazarAdi: trim(this.state.yazarAdi),
-        kitapKimde: trim(this.state.kitapKimde),
-        yayinEvi: trim(this.state.yayinEvi),
-        image: task.snapshot.downloadURL
-      });
-      //      newPicture.set(record);
-    });
+  yasinChange2(event) {
+    this.setState({ yasin2: event.target.value });
   }
 
   _handleImageChange(e) {
@@ -177,56 +90,55 @@ class MessageBox extends Component {
 
   _handleSubmit(e) {
 
-    if (this.state.message === "") {
-      alert("Lütfen Kitap Adını Giriniz!");
+    e.preventDefault();
+    console.log('handle uploading-', this.state.file);
 
-    }
-    else if (this.state.file === "") {
-      alert("Lütfen resim Giriniz!");
-    }
-    else {
+    const storageRef = firebase.storage().ref(`${this.state.file.name}`);
+    const task = storageRef.put(this.state.file);
 
-      e.preventDefault();
-      console.log('handle uploading-', this.state.file);
-
-      const storageRef = firebase.storage().ref(`${this.state.file.name}`);
-      const task = storageRef.put(this.state.file);
-
-      task.on('state_changed', snapshot => {
-        let percentage = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        this.setState({
-          uploadValue: percentage
-        })
-      }, error => {
-        console.error(error.message);
-      }, () => {
-        /*const record = {
-           image: task.snapshot.downloadURL
-         }*/
-        const dbRef = this.props.db.database().ref('/messages');
-     /* const newPicture = */dbRef.push({
-          adSoyad: trim(this.state.adSoyad),
-          message: trim(this.state.message),
-          yazarAdi: trim(this.state.yazarAdi),
-          kitapKimde: trim(this.state.kitapKimde),
-          yayinEvi: trim(this.state.yayinEvi),
-          image: task.snapshot.downloadURL
-        });
+    task.on('state_changed', snapshot => {
+      let percentage = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+      this.setState({
+        uploadValue: percentage
+      })
+    }, error => {
+      console.error(error.message);
+    }, () => {
+      const dbRef = this.props.db.database().ref('/messages');
+      const timestamp = Date.now();
+      dbRef.push({
+        saat: trim("" + new Intl.DateTimeFormat('tr-TR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(timestamp)),
+        adSoyad: trim(this.state.adSoyad),
+        message: trim(this.state.message),
+        yazarAdi: trim(this.state.yazarAdi),
+        kitapKimde: trim(this.state.kitapKimde),
+        yayinEvi: trim(this.state.yayinEvi),
+        image: task.snapshot.downloadURL
       });
-
-      this.refs.someName.value = '';
-      this.refs.someName2.value = '';
-      this.refs.someName3.value = '';
-      this.refs.file.value = '';
-
-    }
-  }
-
-  yayinEviKaydet() {
-    const dbRef = firebase.database().ref('/yayinEvleri');
-    dbRef.push({
-      yayineviEkle: trim(this.state.yayineviEkle)
     });
+
+    this.refs.someName.value = '';
+    this.refs.someName2.value = '';
+    this.refs.someName3.value = '';
+    this.refs.someName4.value = '';
+    this.refs.file.value = '';
+    this.setState({ imagePreviewUrl: null })
+
+    const dbRef = firebase.database().ref('/AdSoyadList');
+    dbRef.child(this.state.adSoyad).set({
+      AdSoyadList: trim(this.state.adSoyad)
+    });
+
+    const dbRef2 = firebase.database().ref('/kitapKimdeList');
+    dbRef2.child(this.state.kitapKimde).set({
+      AdSoyadList: trim(this.state.kitapKimde)
+    });
+
+    const dbRef3 = firebase.database().ref('/adsoyad-kitapKimde');
+    dbRef3.child(this.state.adSoyad).push({
+      kitapAdi: trim(this.state.message)
+    });
+
   }
 
   componentDidMount() {
@@ -239,14 +151,19 @@ class MessageBox extends Component {
     app2.on('value', snapshot => {
       this.getData2(snapshot.val());
     });
+
+    let app3 = firebase.database().ref('AdSoyadList');
+    app3.on('value', snapshot => {
+      this.getData3(snapshot.val());
+    });
+
+    let app4 = firebase.database().ref('kitapKimdeList');
+    app4.on('value', snapshot => {
+      this.getData4(snapshot.val());
+    });
   }
-
-
   componentWillUnmount() {
     firebase.database().ref('messages').off('value');
-  }
-  componentWillUnmount() {
-    firebase.database().ref('yayinEvleri').off('value');
   }
   getData(values) {
     let messagesVal = values;
@@ -276,6 +193,35 @@ class MessageBox extends Component {
       yayinEvleri
     });
   }
+  getData3(values) {
+    let messagesVal = values;
+    let AdSoyadList = _(messagesVal)
+      .keys()
+      .map(yayineviEkleKey => {
+        let cloned = _.clone(messagesVal[yayineviEkleKey]);
+        cloned.key = yayineviEkleKey;
+        return cloned;
+      })
+      .value();
+    this.setState({
+      AdSoyadList
+    });
+  }
+
+  getData4(values) {
+    let messagesVal = values;
+    let kitapKimdeList = _(messagesVal)
+      .keys()
+      .map(yayineviEkleKey => {
+        let cloned = _.clone(messagesVal[yayineviEkleKey]);
+        cloned.key = yayineviEkleKey;
+        return cloned;
+      })
+      .value();
+    this.setState({
+      kitapKimdeList
+    });
+  }
 
   cek() {
     return (
@@ -289,8 +235,8 @@ class MessageBox extends Component {
         />
         <div>
           <datalist id="datalist1">
-            {this.state.messages.map(fbb =>
-              <option key={fbb.key} value={fbb.adSoyad}>{fbb.adSoyad}</option>
+            {this.state.AdSoyadList.map(fbb =>
+              <option key={fbb.key} value={fbb.AdSoyadList}>{fbb.AdSoyadList}</option>
             )}
           </datalist>
         </div>
@@ -298,6 +244,26 @@ class MessageBox extends Component {
     )
   }
 
+  cekKitaKimde() {
+    return (
+      <div>
+        <input type="text"
+          className="form-control mr-sm-2 search" aria-label="Search"
+          placeholder="Kitap Kimde"
+          onChange={this.handleChange2}
+          ref="someName4"
+          list="datalist1"
+        />
+        <div>
+          <datalist id="datalist1">
+            {this.state.kitapKimdeList.map(fbb =>
+              <option key={fbb.key} value={fbb.kitapKimde}>{fbb.kitapKimde}</option>
+            )}
+          </datalist>
+        </div>
+      </div>
+    )
+  }
 
   render() {
     let { imagePreviewUrl } = this.state;
@@ -329,28 +295,7 @@ class MessageBox extends Component {
                 ref="someName3"
               />
 
-              <label>
-                Kitap Kimde :
-            <select className="custom-select" value={this.state.kitapKimde} onChange={this.handleChange2}>
-                  <option value="Şeref Keser CIO">Şeref Keser CIO</option>
-                  <option value="Çağatay Çiftçi Üniversite 3.Sınıf">Çağatay Çiftçi İ.Ü 3.Sınıf </option>
-                  <option value="Muhammed B. Aydemir Üniversite 3.Sınıf">Muhammed B. Aydemir İ.Ü 3.Sınıf</option>
-                  <option value="Yasin Elüstü Lise Son Sınıf">Yasin Elüstü  BTML Lise Son Sınıf</option>
-                  <option value="Binnur Övecek Lise Son Sınıf">Binnur Övecek Lise Son Sınıf</option>
-                  <option value="Abdülkerim Yapıcı">Abdülkerim Yapıcı</option>
-                  <option value="Oskay Karagülmez">Oskay Karagülmez</option>
-                  <option value="Kübra Köse Üniversite Son Sınıf">Kübra Köse Üniversite Son Sınıf</option>
-                  <option value="Emircan Kavas İ.Ü Bilgisayar Mühendisi">Emircan Kavas İ.Ü Bilgisayar Mühendisi</option>
-                  <option value="Burakcan Çiftçi Lise Son Sınıf">Burakcan Çiftçi Lise Son Sınıf</option>
-                  <option value="Göktem Sağlamoğlu bulurum.com ITI Manager">Göktem Sağlamoğlu bulurum.com ITI Manager</option>
-                  <option value="Emre Saykal Üniversite Bilgisayar Mevzunu">Emre Saykal Üniversite Bilgisayar Mevzunu</option>
-                  <option value="İbrahim Cevher Kadadayı Endüstri 3. Sınıf">İbrahim Cevher Kadadayı Endüstri 3. Sınıf</option>
-                  <option value="Mustafa Akgöl Bilgisayar Mühendisi Mevzunu">Mustafa Akgöl Bilgisayar Mühendisi Mevzunu</option>
-                  <option value="Beyhur Kaya Bilgisyar Mühendisi Mevzunu">Beyhur Kaya Bilgisyar Mühendisi Mevzunu</option>
-                  <option value="Nurican Özcan">Nurican Özcan</option>
-                  <option value="Fonex ERP">Fonex ERP</option>
-                </select>
-              </label>
+              {this.cekKitaKimde()}
 
               <label>
                 Yayın evleri :
@@ -361,19 +306,16 @@ class MessageBox extends Component {
           </select>
               </label>
               <hr />
-
-
               <div className="previewComponent">
                 <form onSubmit={(e) => this._handleSubmit(e)}>
                   <input className="fileInput"
                     type="file"
                     onChange={(e) => this._handleImageChange(e)} ref="file" />
-                  <button className="btn btn-outline-success"
-                    type="submit"
-                    onClick={(e) => this._handleSubmit(e)}>Kaydet</button>
                 </form>
+                <button className="btn btn-outline-success"
+                  type="submit"
+                  onClick={(e) => this._handleSubmit(e)}>Kaydet</button>
               </div>
-
             </div>
             <div className="sag">
               <div className="imgPreview">
@@ -381,34 +323,6 @@ class MessageBox extends Component {
               </div>
             </div>
           </div>
-
-
-
-
-
-
-
-
-          {/*
-        <hr />
-
-        <input type="text"
-          className="form-control mr-sm-2 search" aria-label="Search"
-          placeholder="Yayın Evi Ekleniz"
-          onChange={this.onChange4.bind(this)}
-        />
-        <br />
-        <input type="button" className="btn btn-outline-success" value="Yayın Evini Kaydet" onClick={this.yayinEviKaydet} />
-        <hr />
-        <br />
- */ }
-
-          {/*
-       <button className="btn btn-outline-success" onClick={this.on2}>Kaydet</button>
-          <FileUpload onUpload={this.handleUpload} />*/
-
-          }
-
         </div>
       </div>
     )
