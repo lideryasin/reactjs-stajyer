@@ -6,7 +6,7 @@ class Home extends Component {
     render() {
         return (
             <div>
-                <Jumbotron subtitle="“Bir kitap okuyan her şeyi bildiğini zanneder. İkinci kitabı okuyan kuşkuya düşer. Üçüncü kitabı okuyan hiçbir şey bilmediğini anlar.” Frederick Pollock" />
+                <Jumbotron subtitle="" />
                 <div className="container">
                     <MessageList />
                 </div>
